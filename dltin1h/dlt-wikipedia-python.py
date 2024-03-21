@@ -17,13 +17,17 @@ from pyspark.sql.types import *
 # COMMAND ----------
 
 # DBTITLE 1,Ingest raw clickstream data
-json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/2015_2_clickstream.json"
+json_path = "/databricks-datasets/wikipedia-datasets/data-001/clickstream/raw-uncompressed-json/"
 @dlt.table(
   comment="The raw wikipedia clickstream dataset, ingested from /databricks-datasets."
 )
 def clickstream_raw():          
   return (
-    spark.read.json(json_path)
+    spark
+    .readStream
+    .format("cloudFiles")
+    .option("cloudFiles.format", "json")
+    .load(json_path)
   )
 
 # COMMAND ----------
@@ -36,7 +40,7 @@ def clickstream_raw():
 @dlt.expect_or_fail("valid_count", "click_count > 0")
 def clickstream_prepared():
   return (
-    dlt.read("clickstream_raw")
+    dlt.readStream("clickstream_raw")
       .withColumn("click_count", expr("CAST(n AS INT)"))
       .withColumnRenamed("curr_title", "current_page_title")
       .withColumnRenamed("prev_title", "previous_page_title")
