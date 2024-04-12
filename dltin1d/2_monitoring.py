@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-pipeline_id = "2d377d6f-ed0f-4500-a4ec-4e0eb33ca9a0"
+pipeline_id = "9955a7fe-4f1b-4042-a911-2481a82c3e62"
 
 event_df = spark.sql(f'SELECT * FROM event_log("{pipeline_id}")')
 display(event_df)
@@ -25,7 +25,7 @@ event_df.createOrReplaceTempView("event_log_raw")
 # MAGIC CREATE
 # MAGIC OR REPLACE TEMP VIEW latest_update AS
 # MAGIC SELECT
-# MAGIC   origin.update_id AS id
+# MAGIC   *
 # MAGIC FROM
 # MAGIC   event_log_raw
 # MAGIC WHERE
@@ -46,17 +46,16 @@ event_df.createOrReplaceTempView("event_log_raw")
 
 # COMMAND ----------
 
-# MAGIC %sql 
+# MAGIC %sql
 # MAGIC SELECT
-# MAGIC   details:flow_definition.output_dataset as output_dataset,
-# MAGIC   details:flow_definition.input_datasets as input_dataset
+# MAGIC   details :flow_definition.output_dataset as output_dataset,
+# MAGIC   details :flow_definition.input_datasets as input_dataset
 # MAGIC FROM
 # MAGIC   event_log_raw,
 # MAGIC   latest_update
 # MAGIC WHERE
 # MAGIC   event_type = 'flow_definition'
-# MAGIC   AND
-# MAGIC   origin.update_id = latest_update.id
+# MAGIC   AND origin.update_id = latest_update.id
 
 # COMMAND ----------
 

@@ -23,4 +23,4 @@
 
 # COMMAND ----------
 
-
+https://docs.databricks.com/en/delta-live-tables/expectations.html

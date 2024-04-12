@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %sql
 # MAGIC CREATE TEMPORARY VIEW
-# MAGIC   users
+# MAGIC   users_tempview
 # MAGIC AS SELECT
 # MAGIC   col1 AS userId,
 # MAGIC   col2 AS name,
@@ -28,22 +28,26 @@
 
 # COMMAND ----------
 
-# MAGIC %md ## CDC type 1
+# MAGIC %md ## SCD type 1
 
 # COMMAND ----------
 
 import dlt
 from pyspark.sql.functions import col, expr
 
-@dlt.view
-def users():
-  return spark.readStream.format("delta").table("users")
+@dlt.table
+def users_cdc():
+  return (spark
+    .readStream
+    .format("cloudFiles")
+    .option("cloudFiles.format", "csv")
+    .load("/Volumes/databricks_training/raw/users_cdc/")
+    )
 
-dlt.create_streaming_table("target")
-
+dlt.create_streaming_live_table("target_scd1")
 dlt.apply_changes(
-  target = "target",
-  source = "users",
+  target = "target_scd1",
+  source = "users_cdc",
   keys = ["userId"],
   sequence_by = col("sequenceNum"),
   apply_as_deletes = expr("operation = 'DELETE'"),
@@ -54,19 +58,14 @@ dlt.apply_changes(
 
 # COMMAND ----------
 
-# MAGIC %md ## CDC type 2
+# MAGIC %md ## SCD type 2
 
 # COMMAND ----------
 
-@dlt.view
-def users():
-  return spark.readStream.format("delta").table("users")
-
-dlt.create_streaming_table("target")
-
+dlt.create_streaming_live_table("target_scd2")
 dlt.apply_changes(
-  target = "target",
-  source = "users",
+  target = "target_scd2",
+  source = "users_cdc",
   keys = ["userId"],
   sequence_by = col("sequenceNum"),
   apply_as_deletes = expr("operation = 'DELETE'"),
